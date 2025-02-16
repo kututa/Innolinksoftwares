@@ -52,6 +52,15 @@ const Header: React.FC<HeaderProps> = ({ onAuthClick }) => {
             >
               Home
             </Link>
+
+            <Link 
+              to="/about" 
+              className={`text-gray-700 hover:text-[#106EBE] transition-colors ${
+                isActive('/about') ? 'text-[#106EBE] font-semibold' : ''
+              }`}
+            >
+              About Us
+            </Link>
             
             {/* Services Dropdown */}
             <div className="relative">
@@ -95,14 +104,7 @@ const Header: React.FC<HeaderProps> = ({ onAuthClick }) => {
             >
               Portfolio
             </Link>
-            <Link 
-              to="/about" 
-              className={`text-gray-700 hover:text-[#106EBE] transition-colors ${
-                isActive('/about') ? 'text-[#106EBE] font-semibold' : ''
-              }`}
-            >
-              About Us
-            </Link>
+           
             <Link 
               to="/blog" 
               className={`text-gray-700 hover:text-[#106EBE] transition-colors ${
