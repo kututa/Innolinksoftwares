@@ -12,6 +12,17 @@ import {
   Calendar
 } from 'lucide-react';
 
+interface payment {
+ transactionId: string,
+ userId: number,
+ orderId: string,
+ paymentMethod: string,
+ status: string,
+  amount: number,
+  createdAt: string,
+
+}
+
 const PaymentProcessing = () => {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');

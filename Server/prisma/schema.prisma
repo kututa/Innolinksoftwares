@@ -1,5 +1,3 @@
-
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -77,25 +75,26 @@ enum NotificationStatus {
 /// Models
 
 model User {
-  id              Int              @id @default(autoincrement())
-  fullName        String           @map("full_name")
-  email           String           @unique
-  password        String           @map("password")
-  phone           String?          @map("phone")
-  role            UserRole         @default(user)
-  icon            String?
-  accountStatus   AccountStatus    @default(pending) @map("account_status")
-  createdAt       DateTime         @default(now()) @map("created_at")
-
+  id               Int               @id @default(autoincrement())
+  fullName         String            @map("full_name")
+  email            String            @unique
+  password         String            @map("password")
+  phone            String?           @map("phone")
+  role             UserRole          @default(user)
+  icon             String?
+  accountStatus    AccountStatus     @default(pending) @map("account_status")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  lastLogin        DateTime?         @map("last_login")
   // Relations
-  activityLogs    UserActivity[]
-  orders          Order[]
-  payments        Payment[]
-  supportTickets  SupportTicket[]
+  activityLogs     UserActivity[]
+  orders           Order[]
+  payments         Payment[]
+  supportTickets   SupportTicket[]
   supportResponses SupportResponse[]
-  notifications   Notification[]
-  systemLogs      SystemLog[]      @relation("AdminLogs")
-  
+  notifications    Notification[]
+  systemLogs       SystemLog[]       @relation("AdminLogs")
+
+  Review Review[]
 }
 
 model UserActivity {
@@ -104,106 +103,108 @@ model UserActivity {
   action    String
   timestamp DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
 
 model Service {
-  id          Int       @id @default(autoincrement())
+  id          Int     @id @default(autoincrement())
   name        String
-  category    String?
-  image       String?
-  description String?
+  category    String
+  image       String
+  description String
   price       Decimal
-  isActive    Boolean   @default(true)
- 
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
+  icon        String?
+  isActive    Boolean @default(true)
 
-  orders      Order[]   // Orders associated with this service
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  orders Order[] // Orders associated with this service
 }
 
 model Order {
-  id          Int         @id @default(autoincrement())
-  userId      Int
-  serviceId   Int      
-  orderNumber String      @unique @map("order_number")
-  status      OrderStatus @default(pending)
-  totalAmount Decimal     @map("total_amount")  
-  createdAt   DateTime    @default(now()) @map("created_at")
-  updatedAt   DateTime    @default(now()) @updatedAt @map("updated_at")
+  orderNumber            String      @id @unique @map("order_number")
+  userId                 Int         @map("user_id")
+  serviceId              Int         @map("service_id")
+  projectName            String
+  projectDescription     String
+  status                 OrderStatus @default(pending)
+  budget                 Decimal     @map("total_amount")
+  additionalRequirements String?
+  attachments            Json? // Allows storing an array of file paths/URLs
+  createdAt              DateTime    @default(now()) @map("created_at")
+  updatedAt              DateTime    @default(now()) @updatedAt @map("updated_at")
 
-
-  user        User        @relation(fields: [userId], references: [id])
-  service     Service     @relation(fields: [serviceId], references: [id])
-  progress    OrderProgress[]
-  payments    Payment[]
+  user     User            @relation(fields: [userId], references: [id])
+  service  Service         @relation(fields: [serviceId], references: [id])
+  progress OrderProgress[]
+  payments Payment[]
+  reviews  Review[]
 }
 
 model OrderProgress {
-  id        Int                @id @default(autoincrement())
-  orderId   Int
+  id        Int                 @id @default(autoincrement())
+  orderId   String              @map("order_id")
   status    OrderProgressStatus
-  updatedAt DateTime           @default(now()) @updatedAt @map("updated_at")
+  updatedAt DateTime            @default(now()) @updatedAt @map("updated_at")
 
-  order     Order              @relation(fields: [orderId], references: [id])
+  order Order @relation(fields: [orderId], references: [orderNumber])
 }
 
 model Payment {
-  id            Int           @id @default(autoincrement())
-  userId        Int
-  orderId       Int
   transactionId String        @unique @map("transaction_id")
+  userId        Int
+  orderId       String        @map("order_id")
   paymentMethod PaymentMethod
   status        PaymentStatus @default(pending)
   amount        Decimal
   createdAt     DateTime      @default(now()) @map("created_at")
 
-  user          User          @relation(fields: [userId], references: [id])
-  order         Order         @relation(fields: [orderId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+  order Order @relation(fields: [orderId], references: [orderNumber])
 }
 
 model SupportTicket {
-  id          Int                    @id @default(autoincrement())
+  id          Int                   @id @default(autoincrement())
   userId      Int
   subject     String
   description String
-  priority    SupportTicketPriority  @default(medium)
-  status      SupportTicketStatus    @default(open)
-  createdAt   DateTime               @default(now()) @map("created_at")
+  priority    SupportTicketPriority @default(medium)
+  status      SupportTicketStatus   @default(open)
+  createdAt   DateTime              @default(now()) @map("created_at")
 
-  user        User                   @relation(fields: [userId], references: [id])
-  responses   SupportResponse[]
- 
+  user      User              @relation(fields: [userId], references: [id])
+  responses SupportResponse[]
 }
 
 model SupportResponse {
-  id        Int         @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   ticketId  Int
   userId    Int
   message   String
-  createdAt DateTime    @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  ticket    SupportTicket @relation(fields: [ticketId], references: [id])
-  user      User          @relation(fields: [userId], references: [id])
+  ticket SupportTicket @relation(fields: [ticketId], references: [id])
+  user   User          @relation(fields: [userId], references: [id])
 }
 
 model Notification {
-  id        Int                 @id @default(autoincrement())
-  userId    Int?                // Null if it's a system-wide notification
+  id        Int                @id @default(autoincrement())
+  userId    Int? // Null if it's a system-wide notification
   message   String
   type      NotificationType
-  status    NotificationStatus  @default(unread)
-  createdAt DateTime            @default(now()) @map("created_at")
+  status    NotificationStatus @default(unread)
+  createdAt DateTime           @default(now()) @map("created_at")
 
-  user      User?               @relation(fields: [userId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
 }
 
 model Resource {
-  id          Int       @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   title       String
-  fileUrl     String    @map("file_url")
+  fileUrl     String   @map("file_url")
   description String?
-  createdAt   DateTime  @default(now()) @map("created_at")
+  createdAt   DateTime @default(now()) @map("created_at")
 }
 
 model SystemLog {
@@ -212,5 +213,17 @@ model SystemLog {
   action    String
   timestamp DateTime @default(now())
 
-  admin     User     @relation("AdminLogs", fields: [adminId], references: [id])
+  admin User @relation("AdminLogs", fields: [adminId], references: [id])
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  orderId   String   @map("order_id")
+  userId    Int
+  rating    Decimal  @default(5.0)
+  comment   String?
+  createdAt DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [orderNumber])
+  user  User  @relation(fields: [userId], references: [id])
 }

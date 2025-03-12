@@ -1,22 +1,44 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, AlertCircle, Send } from 'lucide-react';
+import { useAuthContext } from '../../hooks/useAuthContext';
+
+interface Service {
+  id: string;
+  name: string;
+  price: number;
+}
+
+
+interface OrderData {
+  projectName: string;
+  projectDescription: string;
+  budget: number;
+  additionalRequirements: string;
+  attachments: File[];
+  serviceId: string;
+ // userId: number;
+//  name: string;
+ // price: number;
+ // orderDate: string;
+  //status: string;
+}
 
 interface OrderFormProps {
-  service: any;
+  service: Service;
+//  user: User;
   onClose: () => void;
-  onSubmit: (orderData: any) => void;
+  onSubmit: (orderData: OrderData) => Promise<void>;
 }
 
 const OrderForm: React.FC<OrderFormProps> = ({ service, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
-    projectName: '',
-    description: '',
-    deadline: '',
+    projectName: "",
+    projectDescription: "",
     budget: service.price,
-    additionalRequirements: '',
-    attachments: []
+    additionalRequirements: "",
+    
   });
-
+  
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateForm = () => {
@@ -26,44 +48,39 @@ const OrderForm: React.FC<OrderFormProps> = ({ service, onClose, onSubmit }) => 
       newErrors.projectName = 'Project name is required';
     }
     
-    if (!formData.description.trim()) {
-      newErrors.description = 'Project description is required';
+    if (!formData.projectDescription.trim()) {
+      newErrors.projectDescription = 'Project projectDescription is required';
     }
     
-    if (!formData.deadline) {
-      newErrors.deadline = 'Deadline is required';
-    } else {
-      const selectedDate = new Date(formData.deadline);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      if (selectedDate < today) {
-        newErrors.deadline = 'Deadline cannot be in the past';
-      }
-    }
+   
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (validateForm()) {
-      onSubmit({
-        ...formData,
-        serviceId: service.id,
-        serviceTitle: service.title,
-        price: service.price,
-        orderDate: new Date().toISOString(),
-        status: 'pending'
-      });
-    }
-  };
+ const handleSubmit = (e: React.FormEvent) => {
+   e.preventDefault();
+
+   if (validateForm()) {
+     onSubmit({
+       ...formData,
+       attachments: [], // Keep empty unless file handling is added
+       serviceId: service.id,
+      // userId: user.id,
+      // name: service.name,
+       //price: service.price,
+      // orderDate: new Date().toISOString(),
+       //status: "pending",
+     });
+   }
+   console.log("form:",formData);
+   console.log("service:",service);
+ };
+
 
   // Calculate minimum date for deadline (today)
-  const today = new Date();
-  const minDate = today.toISOString().split('T')[0];
+  // const today = new Date();
+  // const minDate = today.toISOString().split('T')[0];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -81,7 +98,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ service, onClose, onSubmit }) => 
               </svg>
             </button>
           </div>
-          <p className="mt-2">You are ordering: {service.title}</p>
+          <p className="mt-2">You are ordering: {service.name}</p>
         </div>
         
         {/* Form */}
@@ -109,25 +126,25 @@ const OrderForm: React.FC<OrderFormProps> = ({ service, onClose, onSubmit }) => 
             )}
           </div>
           
-          {/* Project Description */}
+          {/* Project projectDescription */}
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="projectDescription" className="block text-sm font-medium text-gray-700 mb-1">
               Project Description *
             </label>
             <textarea
               id="description"
-              value={formData.description}
-              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              value={formData.projectDescription}
+              onChange={(e) => setFormData({...formData, projectDescription: e.target.value})}
               rows={4}
               className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#106EBE] focus:border-[#106EBE] ${
-                errors.description ? 'border-red-500' : 'border-gray-300'
+                errors.projectDescription ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Describe your project requirements in detail..."
             />
-            {errors.description && (
+            {errors.projectDescription && (
               <p className="mt-1 text-sm text-red-600 flex items-center">
                 <AlertCircle className="h-4 w-4 mr-1" />
-                {errors.description}
+                {errors.projectDescription}
               </p>
             )}
           </div>
@@ -135,7 +152,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ service, onClose, onSubmit }) => 
           {/* Deadline and Budget */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Deadline */}
-            <div>
+            {/* <div>
               <label htmlFor="deadline" className="block text-sm font-medium text-gray-700 mb-1">
                 Deadline *
               </label>
@@ -158,7 +175,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ service, onClose, onSubmit }) => 
                   {errors.deadline}
                 </p>
               )}
-            </div>
+            </div> */}
             
             {/* Budget */}
             <div>
@@ -232,7 +249,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ service, onClose, onSubmit }) => 
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600">Service:</span>
-                <span className="font-medium">{service.title}</span>
+                <span className="font-medium">{service.name}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Base Price:</span>

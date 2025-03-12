@@ -6,7 +6,7 @@ const{getOrders, getOrder, createOrder, updateOrder, deleteOrder, status, getOrd
 
 router.get('/', getOrders);
 
-router.get('/id', getOrder);
+router.get('/:orderNumber', getOrder);
 
 router.post('/create', createOrder);
 
@@ -14,7 +14,7 @@ router.put('/update', updateOrder);
 
 router.delete('/delete', deleteOrder);
 
-router.put('/status', status);
+router.put('/status/:orderNumber', status);
 
 router.get('/users', getOrdersWithUsers);
 

@@ -1,39 +1,60 @@
-import React, { useState } from 'react';
-import { 
-  Clock, 
-  Package, 
-  CreditCard, 
-  Bell, 
+import React, { useState } from "react";
+import {
+  Clock,
+  Package,
+  CreditCard,
+  Bell,
   MessageSquare,
   FileText,
   Settings,
   User,
   LogOut,
-  Search,
-  Filter,
-  Calendar,
-  ChevronDown,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
+  // Search,
+  // Filter,
+  // Calendar,
+   ChevronDown,
+  // AlertTriangle,
+  // CheckCircle,
+  // XCircle,
   Download,
-  ExternalLink
-} from 'lucide-react';
-import ServiceCatalog from './ServiceCatalog';
-import OrderForm from './OrderForm';
-import OrderHistory from './OrderHistory';
-import { useLogout } from '../../hooks/useLogout';
-import { useNavigate } from 'react-router-dom';
-import { useAuthContext } from '../../hooks/useAuthContext';
+  ExternalLink,
+} from "lucide-react";
+import ServiceCatalog from "./ServiceCatalog";
+import OrderForm from "./OrderForm";
+import OrderHistory from "./OrderHistory";
+import { useLogout } from "../../hooks/useLogout";
+import { useNavigate } from "react-router-dom";
+import { useAuthContext } from "../../hooks/useAuthContext";
+
+interface Service {
+  id: string;
+  name: string;
+  title: string;
+  description: string;
+  price: number;
+}
+interface OrderData {
+  projectName: string;
+  projectDescription: string;
+  budget: number;
+  additionalRequirements: string;
+  attachments: File[];
+  serviceId: string;
+  //  name: string;
+  // price: number;
+  // orderDate: string;
+  //status: string;
+}
 
 const UserDashboard = () => {
-  const [activeSection, setActiveSection] = useState('overview');
+  const [activeSection, setActiveSection] = useState("overview");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [showOrderForm, setShowOrderForm] = useState(false);
-  const [selectedService, setSelectedService] = useState<any>(null);
-const {logout} = useLogout();
-const {user} = useAuthContext();
-const navigate = useNavigate();
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const { logout } = useLogout();
+  const { user } = useAuthContext();
+  console.log("user:", user);
+  const navigate = useNavigate();
   // Mock data for demonstration
   const recentOrders = [
     {
@@ -42,7 +63,7 @@ const navigate = useNavigate();
       status: "in_progress",
       date: "2025-03-15",
       amount: 1299.99,
-      progress: 65
+      progress: 65,
     },
     {
       id: "ORD-2025-002",
@@ -50,7 +71,7 @@ const navigate = useNavigate();
       status: "pending",
       date: "2025-03-14",
       amount: 2499.99,
-      progress: 0
+      progress: 0,
     },
     {
       id: "ORD-2025-003",
@@ -58,8 +79,8 @@ const navigate = useNavigate();
       status: "completed",
       date: "2025-03-10",
       amount: 799.99,
-      progress: 100
-    }
+      progress: 100,
+    },
   ];
 
   const notifications = [
@@ -68,22 +89,22 @@ const navigate = useNavigate();
       type: "update",
       message: "Your order ORD-2025-001 is now 65% complete",
       time: "2 hours ago",
-      read: false
+      read: false,
     },
     {
       id: 2,
       type: "payment",
       message: "Payment for ORD-2025-002 is pending approval",
       time: "5 hours ago",
-      read: false
+      read: false,
     },
     {
       id: 3,
       type: "support",
       message: "Support team has responded to your inquiry",
       time: "1 day ago",
-      read: true
-    }
+      read: true,
+    },
   ];
 
   const supportTickets = [
@@ -92,44 +113,44 @@ const navigate = useNavigate();
       subject: "Technical Issue with Mobile App",
       status: "open",
       priority: "high",
-      lastUpdate: "2025-03-15 14:30"
+      lastUpdate: "2025-03-15 14:30",
     },
     {
       id: "TKT-002",
       subject: "Billing Question",
       status: "closed",
       priority: "medium",
-      lastUpdate: "2025-03-14 09:15"
-    }
+      lastUpdate: "2025-03-14 09:15",
+    },
   ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'in_progress':
-        return 'bg-blue-100 text-blue-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+      case "completed":
+        return "bg-green-100 text-green-800";
+      case "in_progress":
+        return "bg-blue-100 text-blue-800";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high':
-        return 'bg-red-100 text-red-800';
-      case 'medium':
-        return 'bg-orange-100 text-orange-800';
-      case 'low':
-        return 'bg-green-100 text-green-800';
+      case "high":
+        return "bg-red-100 text-red-800";
+      case "medium":
+        return "bg-orange-100 text-orange-800";
+      case "low":
+        return "bg-green-100 text-green-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
-  const handleOrderService = (service: any) => {
+  const handleOrderService = (service: Service) => {
     setSelectedService(service);
     setShowOrderForm(true);
   };
@@ -139,20 +160,56 @@ const navigate = useNavigate();
     setSelectedService(null);
   };
 
-  const handleSubmitOrder = (orderData: any) => {
-    console.log('Order submitted:', orderData);
-    setShowOrderForm(false);
-    setSelectedService(null);
-    // Here you would typically send the order to your backend
-    // and then update the UI accordingly
-    alert('Order submitted successfully!');
-  };
+const handleSubmitOrder = async (orderData: OrderData) => {
+  if (!user) {
+    console.error("User is not logged in");
+    return;
+  }
+
+   const requestData = {
+     ...orderData, // Ensure this includes required fields
+     userId: user.id, // Explicitly add user ID
+   };
+
+   console.log("Submitting order with data:", requestData); 
+
+  try {
+    const response = await fetch("http://localhost:3000/api/orders/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestData),
+    });
+   
+    console.log("data:" + JSON.stringify(requestData));
+
+    if (!response.ok) {
+      let errorMessage = "Order submission failed";
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData?.message || errorMessage;
+      } catch (e) {
+        console.error("Failed to parse error response", e);
+      }
+      console.error(errorMessage);
+      return;
+    }
+
+    console.log("Order submitted successfully!");
+    handleCloseOrderForm();
+  } catch (error) {
+    console.error("Error submitting order:", error);
+  }
+};
+
+
 
   const renderContent = () => {
     switch (activeSection) {
-      case 'services':
+      case "services":
         return <ServiceCatalog onOrderService={handleOrderService} />;
-      case 'orders':
+      case "orders":
         return <OrderHistory />;
       default:
         return renderOverview();
@@ -168,7 +225,9 @@ const navigate = useNavigate();
             <div className="bg-blue-100 text-blue-600 p-3 rounded-lg">
               <Package className="h-6 w-6" />
             </div>
-            <span className="text-sm font-semibold text-blue-600">Active Orders</span>
+            <span className="text-sm font-semibold text-blue-600">
+              Active Orders
+            </span>
           </div>
           <h3 className="text-2xl font-bold text-gray-900">3</h3>
           <p className="text-sm text-gray-500 mt-2">2 in progress, 1 pending</p>
@@ -179,7 +238,9 @@ const navigate = useNavigate();
             <div className="bg-green-100 text-green-600 p-3 rounded-lg">
               <CreditCard className="h-6 w-6" />
             </div>
-            <span className="text-sm font-semibold text-green-600">Total Spent</span>
+            <span className="text-sm font-semibold text-green-600">
+              Total Spent
+            </span>
           </div>
           <h3 className="text-2xl font-bold text-gray-900">$4,599.97</h3>
           <p className="text-sm text-gray-500 mt-2">Last 30 days</p>
@@ -190,7 +251,9 @@ const navigate = useNavigate();
             <div className="bg-purple-100 text-purple-600 p-3 rounded-lg">
               <MessageSquare className="h-6 w-6" />
             </div>
-            <span className="text-sm font-semibold text-purple-600">Support Tickets</span>
+            <span className="text-sm font-semibold text-purple-600">
+              Support Tickets
+            </span>
           </div>
           <h3 className="text-2xl font-bold text-gray-900">2</h3>
           <p className="text-sm text-gray-500 mt-2">1 open, 1 resolved</p>
@@ -201,7 +264,9 @@ const navigate = useNavigate();
             <div className="bg-yellow-100 text-yellow-600 p-3 rounded-lg">
               <Bell className="h-6 w-6" />
             </div>
-            <span className="text-sm font-semibold text-yellow-600">Notifications</span>
+            <span className="text-sm font-semibold text-yellow-600">
+              Notifications
+            </span>
           </div>
           <h3 className="text-2xl font-bold text-gray-900">3</h3>
           <p className="text-sm text-gray-500 mt-2">2 unread messages</p>
@@ -212,8 +277,8 @@ const navigate = useNavigate();
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-lg font-semibold text-gray-900">Recent Orders</h2>
-          <button 
-            onClick={() => setActiveSection('orders')}
+          <button
+            onClick={() => setActiveSection("orders")}
             className="text-[#106EBE] hover:text-[#0FFCBE] text-sm font-medium"
           >
             View All Orders
@@ -253,18 +318,25 @@ const navigate = useNavigate();
                     {order.service}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>
-                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                    <span
+                      className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
+                        order.status
+                      )}`}
+                    >
+                      {order.status.charAt(0).toUpperCase() +
+                        order.status.slice(1)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="w-full bg-gray-200 rounded-full h-2.5">
-                      <div 
-                        className="bg-[#106EBE] h-2.5 rounded-full" 
+                      <div
+                        className="bg-[#106EBE] h-2.5 rounded-full"
                         style={{ width: `${order.progress}%` }}
                       ></div>
                     </div>
-                    <span className="text-xs text-gray-500 mt-1">{order.progress}%</span>
+                    <span className="text-xs text-gray-500 mt-1">
+                      {order.progress}%
+                    </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     ${order.amount.toFixed(2)}
@@ -284,31 +356,45 @@ const navigate = useNavigate();
       {/* Recent Notifications */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-semibold text-gray-900">Recent Notifications</h2>
+          <h2 className="text-lg font-semibold text-gray-900">
+            Recent Notifications
+          </h2>
           <button className="text-[#106EBE] hover:text-[#0FFCBE] text-sm font-medium">
             View All
           </button>
         </div>
         <div className="space-y-4">
           {notifications.map((notification) => (
-            <div 
+            <div
               key={notification.id}
               className={`flex items-start p-4 rounded-lg ${
-                notification.read ? 'bg-white' : 'bg-blue-50'
+                notification.read ? "bg-white" : "bg-blue-50"
               }`}
             >
-              <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                notification.type === 'update' ? 'bg-blue-100 text-blue-600' :
-                notification.type === 'payment' ? 'bg-green-100 text-green-600' :
-                'bg-purple-100 text-purple-600'
-              }`}>
-                {notification.type === 'update' && <Clock className="h-4 w-4" />}
-                {notification.type === 'payment' && <CreditCard className="h-4 w-4" />}
-                {notification.type === 'support' && <MessageSquare className="h-4 w-4" />}
+              <div
+                className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                  notification.type === "update"
+                    ? "bg-blue-100 text-blue-600"
+                    : notification.type === "payment"
+                    ? "bg-green-100 text-green-600"
+                    : "bg-purple-100 text-purple-600"
+                }`}
+              >
+                {notification.type === "update" && (
+                  <Clock className="h-4 w-4" />
+                )}
+                {notification.type === "payment" && (
+                  <CreditCard className="h-4 w-4" />
+                )}
+                {notification.type === "support" && (
+                  <MessageSquare className="h-4 w-4" />
+                )}
               </div>
               <div className="ml-3 flex-1">
                 <p className="text-sm text-gray-900">{notification.message}</p>
-                <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {notification.time}
+                </p>
               </div>
               {!notification.read && (
                 <div className="flex-shrink-0 ml-4">
@@ -323,7 +409,9 @@ const navigate = useNavigate();
       {/* Support Tickets */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-semibold text-gray-900">Support Tickets</h2>
+          <h2 className="text-lg font-semibold text-gray-900">
+            Support Tickets
+          </h2>
           <button className="bg-[#106EBE] hover:bg-[#0FFCBE] text-white hover:text-gray-900 px-4 py-2 rounded-lg transition-colors duration-300">
             New Ticket
           </button>
@@ -362,15 +450,25 @@ const navigate = useNavigate();
                     {ticket.subject}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      ticket.status === 'open' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
+                    <span
+                      className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        ticket.status === "open"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {ticket.status.charAt(0).toUpperCase() +
+                        ticket.status.slice(1)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(ticket.priority)}`}>
-                      {ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1)}
+                    <span
+                      className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(
+                        ticket.priority
+                      )}`}
+                    >
+                      {ticket.priority.charAt(0).toUpperCase() +
+                        ticket.priority.slice(1)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -421,10 +519,10 @@ const navigate = useNavigate();
                   />
                   <div className="hidden md:block text-left">
                     <span className="text-sm font-semibold text-gray-700">
-                     {user?.fullName}
+                      {user?.fullName}
                     </span>
                     <span className="block text-xs text-gray-500">
-                     {user?.email}
+                      {user?.email}
                     </span>
                   </div>
                   <ChevronDown className="h-4 w-4 text-gray-500" />
