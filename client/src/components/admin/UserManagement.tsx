@@ -79,6 +79,22 @@ const UserManagement = () => {
   //     isFlagged: false
   //   }
   // ];
+const handleChangeStatus = async (id: number, status: string) => {
+    const res = await fetch(`http://localhost:3000/api/users/status/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify({ accountStatus: status }),
+    });
+    const data = await res.json();
+    console.log(data);
+    fetchUsers();
+  }
+
+
+
 
   const getStatusColor = (accountStatus: string) => {
     switch (accountStatus) {
@@ -88,6 +104,10 @@ const UserManagement = () => {
         return 'bg-yellow-100 text-yellow-800';
       case 'suspended':
         return 'bg-red-100 text-red-800';
+      case 'rejected':
+        return 'bg-red-100 text-red-800';
+      case 'flagged':
+        return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -189,10 +209,10 @@ const UserManagement = () => {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {user.createdAt}
+                  {new Date(user.createdAt).toLocaleString()}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {user.lastLogin}
+                  {new Date(user.lastLogin).toLocaleString()}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <div className="flex space-x-2">
@@ -201,25 +221,25 @@ const UserManagement = () => {
                     </button>
                     {user.accountStatus === 'pending' && (
                       <>
-                        <button className="p-1 hover:bg-green-100 rounded" title="Approve">
+                        <button className="p-1 hover:bg-green-100 rounded" title="Approve" onClick={() => handleChangeStatus(user.id, 'active')}>
                           <Check className="h-5 w-5 text-green-600" />
                         </button>
-                        <button className="p-1 hover:bg-red-100 rounded" title="Reject">
+                        <button className="p-1 hover:bg-red-100 rounded" title="Reject" onClick={() => handleChangeStatus(user.id, 'rejected')}>
                           <X className="h-5 w-5 text-red-600" />
                         </button>
                       </>
                     )}
                     {user.accountStatus === 'active' && (
-                      <button className="p-1 hover:bg-red-100 rounded" title="Suspend">
+                      <button className="p-1 hover:bg-red-100 rounded" title="Suspend" onClick={() => handleChangeStatus(user.id, 'suspended')}>
                         <Lock className="h-5 w-5 text-red-600" />
                       </button>
                     )}
                     {user.accountStatus === 'suspended' && (
-                      <button className="p-1 hover:bg-green-100 rounded" title="Reactivate">
+                      <button className="p-1 hover:bg-green-100 rounded" title="Reactivate" onClick={() => handleChangeStatus(user.id, 'active')}>
                         <Unlock className="h-5 w-5 text-green-600" />
                       </button>
                     )}
-                    <button className="p-1 hover:bg-yellow-100 rounded" title="Flag Account">
+                    <button className="p-1 hover:bg-yellow-100 rounded" title="Flag Account" onClick={() => handleChangeStatus(user.id, 'flagged')}>
                       <Flag className="h-5 w-5 text-yellow-600" />
                     </button>
                     <button className="p-1 hover:bg-gray-100 rounded">

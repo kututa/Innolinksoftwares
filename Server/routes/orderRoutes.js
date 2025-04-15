@@ -1,21 +1,45 @@
 const express = require("express");
 const router = express.Router();
 
-const{getOrders, getOrder, createOrder, updateOrder, deleteOrder, status, getOrdersWithUsers} = require('../controllers/orderController');
+const {
+  getOrders,
+  getOrder,
+  createOrder,
+  updateOrder,
+  deleteOrder,
+  status,
+  getOrdersWithUsers,
+  getOrdersByUser,
+ getPending,
+  getApproved, getUserApprovedOrders, getUserPendingOrders
+} = require("../controllers/orderController");
+
+router.get("/something", getOrdersWithUsers);
+
+router.get("/status/approved", getApproved); 
+
+router.get("/status/pending",getPending);
+
+router.get("/:userId/approved", getUserApprovedOrders);
+
+router.get("/:userId/pending", getUserPendingOrders);
 
 
-router.get('/', getOrders);
 
-router.get('/:orderNumber', getOrder);
+router.get("/", getOrders);
 
-router.post('/create', createOrder);
+router.get("/:orderNumber", getOrder);
 
-router.put('/update', updateOrder);
+router.post("/create", createOrder);
 
-router.delete('/delete', deleteOrder);
+router.put("/update/:orderNumber", updateOrder);
 
-router.put('/status/:orderNumber', status);
+router.delete("/delete/:orderNumber", deleteOrder);
 
-router.get('/users', getOrdersWithUsers);
+router.put("/status/:orderNumber", status);
+
+router.get("/user/:userId", getOrdersByUser);
+
+
 
 module.exports = router;

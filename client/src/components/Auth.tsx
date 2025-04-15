@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { Mail, Lock, User, ArrowRight } from "lucide-react";
+
 import { useUserLogin } from "../hooks/useLogin";
 //import { useNavigate } from "react-router-dom";
 import { useUserRegister } from "../hooks/useRegister";
+//import { supabase } from "../superbaseClient";
+
 
 interface AuthProps {
   initialMode?: "login" | "register";
@@ -19,6 +22,11 @@ const Auth: React.FC<AuthProps> = ({ initialMode = "login" }) => {
     password: "",
     confirmPassword: "",
   });
+  const [isVisible, setIsVisible] = useState(false)
+
+  const visibilityHandler= () => {
+    setIsVisible(!isVisible)
+  }
 
   //const navigate = useNavigate();
 
@@ -49,10 +57,25 @@ const Auth: React.FC<AuthProps> = ({ initialMode = "login" }) => {
     }
   };
 
-  const handleGoogleAuth = () => {
-    // Handle Google authentication
-    console.log("Google auth clicked");
+  const handleGoogleLogin = async () => {
+    // try {
+    //   const { error } = await supabase.auth.signInWithOAuth({
+    //     provider: "google",
+    //     options: {
+    //       redirectTo: window.location.origin, // ✅ Redirect to your app after login
+    //     },
+    //   });
+
+    //   if (error) {
+    //     console.error("Google Sign-In error:", error.message);
+    //   }
+    // } catch (error) {
+    //   console.error("Google authentication failed:", error);
+    // }
+    console.log("Google login");
   };
+
+
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -158,7 +181,7 @@ const Auth: React.FC<AuthProps> = ({ initialMode = "login" }) => {
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={isVisible ? "text" : "password"}
                   required
                   className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-[#0FFCBE] focus:border-[#0FFCBE] focus:z-10 sm:text-sm"
                   placeholder="Password"
@@ -167,6 +190,16 @@ const Auth: React.FC<AuthProps> = ({ initialMode = "login" }) => {
                     setFormData({ ...formData, password: e.target.value })
                   }
                 />
+
+                {/* Password visibility toggle */}
+                <button
+                  type="button"
+                  onClick={visibilityHandler}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0FFCBE] transition-colors duration-300"
+                  aria-label={isVisible ? "Hide password" : "Show password"}
+                >
+                  {isVisible ? <p>Hide</p> : <p>show</p>}
+                </button>
               </div>
             </div>
 
@@ -183,7 +216,7 @@ const Auth: React.FC<AuthProps> = ({ initialMode = "login" }) => {
                   <input
                     id="confirmPassword"
                     name="confirmPassword"
-                    type="password"
+                    type={isVisible ? "text" : "password"}
                     required
                     className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-[#0FFCBE] focus:border-[#0FFCBE] focus:z-10 sm:text-sm"
                     placeholder="Confirm Password"
@@ -195,6 +228,15 @@ const Auth: React.FC<AuthProps> = ({ initialMode = "login" }) => {
                       })
                     }
                   />
+                  {/* Password visibility toggle */}
+                  <button
+                    type="button"
+                    onClick={visibilityHandler}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0FFCBE] transition-colors duration-300"
+                    aria-label={isVisible ? "Hide password" : "Show password"}
+                  >
+                    {isVisible ? <p>Hide</p> : <p>show</p>}
+                  </button>
                 </div>
               </div>
             )}
@@ -226,7 +268,7 @@ const Auth: React.FC<AuthProps> = ({ initialMode = "login" }) => {
           {/* Google Auth Button */}
           <button
             type="button"
-            onClick={handleGoogleAuth}
+            onClick={handleGoogleLogin}
             className="relative w-full flex justify-center py-3 px-4 border-2 border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0FFCBE] transition-colors"
           >
             <img

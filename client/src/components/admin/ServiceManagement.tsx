@@ -1,4 +1,4 @@
-import  { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Search,
   Filter,
@@ -12,27 +12,28 @@ import {
   Megaphone,
   Headphones,
   AlertTriangle,
-  Check,
+  //Check,
   X,
 } from "lucide-react";
-   interface Service {
-     id: number;
-     name: string;
-     description: string;
-     category: string;
-     price: number;
-     image: string;
-     icon: string;
-     isActive: boolean;
-   }
+import useServicesStore from "../../store/services.store";
+interface Service {
+  id: number;
+  name: string;
+  description: string;
+  category: string;
+  price: string;
+  image?: string;
+  icon?: string;
+  isActive?: boolean;
+}
 const ServiceManagement = () => {
- 
+  const { fetchServices, createService, updateService, deleteService } = useServicesStore();
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [currentService, setCurrentService] = useState<Service>();
-  const [services, setServices] = useState<Service[]>([]);
+  const services = useServicesStore((state) => state.services);
 
   // Form state for add/edit
   const [formData, setFormData] = useState({
@@ -41,6 +42,8 @@ const ServiceManagement = () => {
     category: "web",
     price: "",
     image: "",
+    icon: "Globe",
+    isActive: true,
   });
 
   // // Mock data for services
@@ -130,27 +133,20 @@ const ServiceManagement = () => {
     setShowAddModal(true);
   };
 
-   const submitAddService = async () => {
-     const addService = await fetch(
-       "http://localhost:3000/api/services/create",
-       {
-         method: "POST",
-         headers: {
-           "Content-Type": "application/json",
-         },
-         body: JSON.stringify(formData),
-       }
-     );
-
-     const newService = await addService.json();
-     console.log(newService);
-     setServices([...services, newService]);
-     setShowAddModal(false);
-   };
+  const submitAddService = async () => {
+    try {
+      await createService(formData);
+      setShowAddModal(false);
+    } catch (error) {
+      console.error("Error adding service:", error);
+    }
+  };
 
   const handleEditService = async (service: Service) => {
     setCurrentService(service);
-    const editFormData = await fetch("http://localhost:3000/api/services/" + service.id);
+    const editFormData = await fetch(
+      "http://localhost:3000/api/services/" + service.id
+    );
     const editService = await editFormData.json();
     setFormData({
       name: editService.name,
@@ -158,10 +154,12 @@ const ServiceManagement = () => {
       category: editService.category,
       price: editService.price,
       image: editService.image,
+      icon: formData.icon, // Retain the current icon value
+      isActive: formData.isActive, // Retain the current isActive value
     });
     console.log(editService);
     // setFormData({
-    
+
     setShowEditModal(true);
   };
 
@@ -170,63 +168,45 @@ const ServiceManagement = () => {
     setShowDeleteModal(true);
   };
 
- 
-
-
   const submitEditService = async () => {
     if (!currentService) return;
-
-    const updatedServices = await fetch(
-      `http://localhost:3000/api/services/update/${currentService.id}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      }
-    );
-    const data = await updatedServices.json();
-    console.log(data);
-    setServices(
-      services.map((service) =>
-        service.id === currentService.id ? { ...data } : service
-      )
-    );
+try{
+   await updateService(currentService.id, {
+     ...currentService,
+     ...formData,
+   });
+   setShowEditModal(false);
+} catch (error) {
+      console.error("Error updating service:", error);
+    }
   };
 
   const confirmDeleteService = async () => {
-     if (!currentService) return;
-    const deleteService = await fetch(
-      `http://localhost:3000/api/services/delete/${currentService.id}`,
-      {
-        method: "DELETE",
-      }
-    );
-    const data = await deleteService.json();
-    console.log(data);
-    setServices(services.filter((service) => service.id !== currentService.id));
-    setShowDeleteModal(false);
-  
+    if (!currentService) return;
+    try {
+      await deleteService(currentService.id);
+      setShowDeleteModal(false);
+    } catch (error) {
+      console.error("Error deleting service:", error);
+    }
+    setCurrentService(undefined);
+    
   };
 
-    const fetchServices = async () => {
-      const res = await fetch("http://localhost:3000/api/services/");
-      const data = await res.json();
-      setServices(data);
-      console.log(data);
-    };
-
-
-   const filteredServices = services.filter(service =>
-     service.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     service.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     service.category?.toLowerCase().includes(searchTerm.toLowerCase())
-   );
+  const filteredServices = Array.isArray(services)
+    ? services.filter(
+        (service) =>
+          service.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          service.description
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          service.category?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [];
 
   useEffect(() => {
     fetchServices();
-  }, []);
+  }, [fetchServices]);
 
   return (
     <div className="space-y-6">

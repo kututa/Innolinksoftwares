@@ -1,13 +1,19 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
-const {getNotifications, getNotification, createNotification} = require('../controllers/notificationController');
+const {
+  getUserAllNotifications,
+  getUnreadUserNotifications,
+  markNotificationAsRead,
+  createUserNotification,
+} = require("../controllers/notificationController");
 
-router.get('/', getNotifications);
+router.get("/:userId", getUserAllNotifications);
 
-router.get('/:id', getNotification);
+router.get("/unread/:userId", getUnreadUserNotifications);
 
-router.post('/create', createNotification);
+router.put("/read/:notificationId", markNotificationAsRead);
 
+router.post("/", createUserNotification);
 
 module.exports = router;

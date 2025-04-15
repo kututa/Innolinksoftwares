@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Search,
   Filter,
@@ -12,50 +12,42 @@ import {
   Calendar,
   Download,
 } from "lucide-react";
-interface Request {
-  id: number;
-  client: string;
-  email: string;
+import useOrdersStore from "../../store/order.store";
+interface Order {
+  orderNumber: string;
   description: string;
   status: string;
-  priority: string;
-  submittedDate: string;
+  createdAt: string;
   deadline: string;
-  lastUpdated: string;
-  assignedTo: string;
-  user: User;
-  service: Service;
-}
-
-interface User {
-  id: string;
-  fullName: string;
-  email: string;
- 
-}
-
-interface Service {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
+  lastUpdate: string;
+  progress: number;
+  submittedDate: string;
+  priority: string;
+  updatedAt: string;
+  user: {
+    id: number;
+    fullName: string;
+    email: string;
+  };
+  service: {
+    id: string;
+    name: string;
+    price: string;
+  };
 }
 
 const ServiceRequests = () => {
   const [selectedPriority, setSelectedPriority] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [requests, setRequests] = useState<Request[]>([]);
+  //const [requests, setRequests] = useState<Request[]>([]);
+  const { getPending, changeStatus } = useOrdersStore();
+  const orders: Order[] = useOrdersStore((state) => state.orders); // Get orders from the store
   // Fetch requests from the server
+
   useEffect(() => {
-    const fetchRequests = async () => {
-      const response = await fetch("http://localhost:3000/api/orders/users");
-      const data = await response.json();
-      setRequests(data);
-      console.log(data);
-    };
-    fetchRequests();
-  }, []);
+    getPending();
+  }, [getPending]);
 
   // const requests = [
   //   {
@@ -98,6 +90,28 @@ const ServiceRequests = () => {
   //     assignedTo: "Alex Designer"
   //   }
   // ];
+
+  // const orderNumber = requests.map((request) => request.orderNumber);
+  // console.log("num",orderNumber);
+
+  const handleChangeStatus = async (
+    orderNumber: string,
+    status: string
+  ): Promise<void> => {
+    try {
+      const success = await changeStatus(orderNumber, status);
+      if (success) {
+       
+        await getPending();
+      }
+      else {
+        console.error("Failed to change order status");
+      }
+    } catch (error) {
+      console.error("Error changing order status:", error);
+   
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -187,133 +201,164 @@ const ServiceRequests = () => {
       </div>
 
       {/* Requests Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Request Details
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Client
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Priority
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Timeline
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {requests.map((request) => (
-              <tr key={request.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4">
-                  <div className="text-sm font-medium text-gray-900">
-                    {request.id}
-                  </div>
-                  <div className="text-sm text-gray-500">{request.service.name}</div>
-                  <div className="text-sm text-gray-500 truncate max-w-xs">
-                    {request.description}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10">
-                      <img
-                        className="h-10 w-10 rounded-full"
-                        src={`https://ui-avatars.com/api/?name=${request.user.fullName}&background=random`}
-                        alt=""
-                      />
-                    </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">
-                        {request.user.fullName}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {request.user.email}
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(
-                      request.priority
-                    )}`}
-                  >
-                    {request.priority ? request.priority.charAt(0).toUpperCase() + request.priority.slice(1) : ""}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
-                      request.status
-                    )}`}
-                  >
-                    {formatStatus(request.status)}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">
-                    <div className="flex items-center space-x-1">
-                      <Calendar className="h-4 w-4 text-gray-400" />
-                      <span>Due: {request.deadline}</span>
-                    </div>
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    <div className="flex items-center space-x-1">
-                      <Clock className="h-4 w-4 text-gray-400" />
-                      <span>Updated: {request.lastUpdated}</span>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex space-x-2">
-                    <button
-                      className="p-1 hover:bg-blue-100 rounded"
-                      title="Message Client"
-                    >
-                      <MessageSquare className="h-5 w-5 text-blue-600" />
-                    </button>
-                    {request.status === "pending" && (
-                      <>
-                        <button
-                          className="p-1 hover:bg-green-100 rounded"
-                          title="Approve"
-                        >
-                          <CheckCircle className="h-5 w-5 text-green-600" />
-                        </button>
-                        <button
-                          className="p-1 hover:bg-red-100 rounded"
-                          title="Reject"
-                        >
-                          <XCircle className="h-5 w-5 text-red-600" />
-                        </button>
-                      </>
-                    )}
-                    <button
-                      className="p-1 hover:bg-yellow-100 rounded"
-                      title="Flag Request"
-                    >
-                      <Flag className="h-5 w-5 text-yellow-600" />
-                    </button>
-                    <button className="p-1 hover:bg-gray-100 rounded">
-                      <MoreVertical className="h-5 w-5 text-gray-600" />
-                    </button>
-                  </div>
-                </td>
+      {orders.length > 0 ? (
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Request Details
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Client
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Priority
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Timeline
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {orders.map((request) => (
+                <tr key={request.orderNumber} className="hover:bg-gray-50">
+                  <td className="px-6 py-4">
+                    <div className="text-sm font-medium text-gray-900">
+                      {request.orderNumber}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {request.service?.name || 'No service specified'}
+                    </div>
+                    <div className="text-sm text-gray-500 truncate max-w-xs">
+                      {request.description}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-10 w-10">
+                        <img
+                          className="h-10 w-10 rounded-full"
+                          src={`https://ui-avatars.com/api/?name=${request.user?.fullName || 'User'}&background=random`}
+                          alt=""
+                        />
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-gray-900">
+                          {request.user?.fullName || 'Unknown User'}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {request.user?.email || 'No email'}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(
+                        request.priority
+                      )}`}
+                    >
+                      {request.priority
+                        ? request.priority.charAt(0).toUpperCase() +
+                          request.priority.slice(1)
+                        : ""}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
+                        request.status
+                      )}`}
+                    >
+                      {formatStatus(request.status)}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      <div className="flex items-center space-x-1">
+                        <Calendar className="h-4 w-4 text-gray-400" />
+                        <span>
+                          Due: {new Date(request.deadline).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      <div className="flex items-center space-x-1">
+                        <Clock className="h-4 w-4 text-gray-400" />
+                        <span>
+                          Updated:{" "}
+                          {new Date(request.updatedAt).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex space-x-2">
+                      <button
+                        className="p-1 hover:bg-blue-100 rounded"
+                        title="Message Client"
+                      >
+                        <MessageSquare className="h-5 w-5 text-blue-600" />
+                      </button>
+                      {request.status === "pending" && (
+                        <>
+                          <button
+                            className="p-1 hover:bg-green-100 rounded"
+                            title="Approve"
+                            onClick={() => {
+                              handleChangeStatus(
+                                request.orderNumber,
+                                "approved"
+                              );
+                            }}
+                          >
+                            <CheckCircle className="h-5 w-5 text-green-600" />
+                          </button>
+                          <button
+                            className="p-1 hover:bg-red-100 rounded"
+                            title="Reject"
+                            onClick={() => {
+                              handleChangeStatus(
+                                request.orderNumber,
+                                "rejected"
+                              );
+                            }}
+                          >
+                            <XCircle className="h-5 w-5 text-red-600" />
+                          </button>
+                        </>
+                      )}
+                      <button
+                        className="p-1 hover:bg-yellow-100 rounded"
+                        title="Flag Request"
+                        onClick={() => {
+                          handleChangeStatus(request.orderNumber, "flagged");
+                        }}
+                      >
+                        <Flag className="h-5 w-5 text-yellow-600" />
+                      </button>
+                      <button className="p-1 hover:bg-gray-100 rounded">
+                        <MoreVertical className="h-5 w-5 text-gray-600" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="p-6 text-gray-500 text-center">No requests found</div>
+        </div>
+      )}
 
       {/* Pagination */}
       <div className="flex items-center justify-between">

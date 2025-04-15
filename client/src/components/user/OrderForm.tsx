@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, AlertCircle, Send } from 'lucide-react';
-import { useAuthContext } from '../../hooks/useAuthContext';
+//import { useAuthContext } from '../../hooks/useAuthContext';
 
 interface Service {
   id: string;
@@ -16,6 +16,7 @@ interface OrderData {
   additionalRequirements: string;
   attachments: File[];
   serviceId: string;
+  deadline?: string;
  // userId: number;
 //  name: string;
  // price: number;
@@ -36,6 +37,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ service, onClose, onSubmit }) => 
     projectDescription: "",
     budget: service.price,
     additionalRequirements: "",
+    deadline: "",
     
   });
   
@@ -64,7 +66,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ service, onClose, onSubmit }) => 
    if (validateForm()) {
      onSubmit({
        ...formData,
-       attachments: [], // Keep empty unless file handling is added
+       attachments: [], 
        serviceId: service.id,
       // userId: user.id,
       // name: service.name,
@@ -79,8 +81,8 @@ const OrderForm: React.FC<OrderFormProps> = ({ service, onClose, onSubmit }) => 
 
 
   // Calculate minimum date for deadline (today)
-  // const today = new Date();
-  // const minDate = today.toISOString().split('T')[0];
+ const today = new Date();
+   const minDate = today.toISOString().split('T')[0];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -152,7 +154,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ service, onClose, onSubmit }) => 
           {/* Deadline and Budget */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Deadline */}
-            {/* <div>
+            <div>
               <label htmlFor="deadline" className="block text-sm font-medium text-gray-700 mb-1">
                 Deadline *
               </label>
@@ -175,7 +177,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ service, onClose, onSubmit }) => 
                   {errors.deadline}
                 </p>
               )}
-            </div> */}
+            </div> 
             
             {/* Budget */}
             <div>

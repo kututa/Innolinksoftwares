@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Clock,
   Package,
@@ -12,7 +12,7 @@ import {
   // Search,
   // Filter,
   // Calendar,
-   ChevronDown,
+  ChevronDown,
   // AlertTriangle,
   // CheckCircle,
   // XCircle,
@@ -20,11 +20,16 @@ import {
   ExternalLink,
 } from "lucide-react";
 import ServiceCatalog from "./ServiceCatalog";
+import CatalogService from "./ServiceCatalog";
 import OrderForm from "./OrderForm";
 import OrderHistory from "./OrderHistory";
 import { useLogout } from "../../hooks/useLogout";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "../../hooks/useAuthContext";
+import useNotificationStore from "../../store/notification.store";
+import useOrdersStore from "../../store/order.store";
+
+//import { supabase } from "../../superbaseClient";
 
 interface Service {
   id: string;
@@ -33,79 +38,42 @@ interface Service {
   description: string;
   price: number;
 }
-interface OrderData {
-  projectName: string;
-  projectDescription: string;
-  budget: number;
-  additionalRequirements: string;
-  attachments: File[];
-  serviceId: string;
-  //  name: string;
-  // price: number;
-  // orderDate: string;
-  //status: string;
+interface Order {
+  orderNumber: string;
+  description: string;
+  status: string;
+  createdAt: string;
+  deadline: string;
+  lastUpdate: string;
+  progress: number;
+  submittedDate: string;
+  priority: string;
+  updatedAt: string;
+  user: {
+    id: number;
+    fullName: string;
+    email: string;
+  };
+  service: {
+    id: string;
+    name: string;
+    price: string;
+  };
 }
 
 const UserDashboard = () => {
+  const { userApproved, getOrdersUser, userPending } = useOrdersStore();
+  const orders: Order[] = useOrdersStore((state) => state.orders);
   const [activeSection, setActiveSection] = useState("overview");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [showOrderForm, setShowOrderForm] = useState(false);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const { logout } = useLogout();
   const { user } = useAuthContext();
-  console.log("user:", user);
   const navigate = useNavigate();
+  const { unread } = useNotificationStore();
+  const notifications = useNotificationStore((state) => state.notifications);
   // Mock data for demonstration
-  const recentOrders = [
-    {
-      id: "ORD-2025-001",
-      service: "Web Development",
-      status: "in_progress",
-      date: "2025-03-15",
-      amount: 1299.99,
-      progress: 65,
-    },
-    {
-      id: "ORD-2025-002",
-      service: "Mobile App Development",
-      status: "pending",
-      date: "2025-03-14",
-      amount: 2499.99,
-      progress: 0,
-    },
-    {
-      id: "ORD-2025-003",
-      service: "UI/UX Design",
-      status: "completed",
-      date: "2025-03-10",
-      amount: 799.99,
-      progress: 100,
-    },
-  ];
-
-  const notifications = [
-    {
-      id: 1,
-      type: "update",
-      message: "Your order ORD-2025-001 is now 65% complete",
-      time: "2 hours ago",
-      read: false,
-    },
-    {
-      id: 2,
-      type: "payment",
-      message: "Payment for ORD-2025-002 is pending approval",
-      time: "5 hours ago",
-      read: false,
-    },
-    {
-      id: 3,
-      type: "support",
-      message: "Support team has responded to your inquiry",
-      time: "1 day ago",
-      read: true,
-    },
-  ];
 
   const supportTickets = [
     {
@@ -150,7 +118,7 @@ const UserDashboard = () => {
     }
   };
 
-  const handleOrderService = (service: Service) => {
+  const handleOrderService = (service: CatalogService) => {
     setSelectedService(service);
     setShowOrderForm(true);
   };
@@ -160,50 +128,48 @@ const UserDashboard = () => {
     setSelectedService(null);
   };
 
-const handleSubmitOrder = async (orderData: OrderData) => {
-  if (!user) {
-    console.error("User is not logged in");
-    return;
-  }
-
-   const requestData = {
-     ...orderData, // Ensure this includes required fields
-     userId: user.id, // Explicitly add user ID
-   };
-
-   console.log("Submitting order with data:", requestData); 
-
-  try {
-    const response = await fetch("http://localhost:3000/api/orders/create", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(requestData),
-    });
-   
-    console.log("data:" + JSON.stringify(requestData));
-
-    if (!response.ok) {
-      let errorMessage = "Order submission failed";
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData?.message || errorMessage;
-      } catch (e) {
-        console.error("Failed to parse error response", e);
-      }
-      console.error(errorMessage);
+  const handleSubmitOrder = async (orderData: OrderData) => {
+    if (!user) {
+      console.error("User is not logged in");
       return;
     }
 
-    console.log("Order submitted successfully!");
-    handleCloseOrderForm();
-  } catch (error) {
-    console.error("Error submitting order:", error);
-  }
-};
+    const requestData = {
+      ...orderData, // Ensure this includes required fields
+      userId: user.id, // Explicitly add user ID
+    };
 
+    console.log("Submitting order with data:", requestData);
 
+    try {
+      const response = await fetch("http://localhost:3000/api/orders/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      console.log("data:" + JSON.stringify(requestData));
+
+      if (!response.ok) {
+        let errorMessage = "Order submission failed";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData?.message || errorMessage;
+        } catch (e) {
+          console.error("Failed to parse error response", e);
+        }
+        console.error(errorMessage);
+        return;
+      }
+
+      console.log("Order submitted successfully!");
+      handleCloseOrderForm();
+    } catch (error) {
+      console.error("Error submitting order:", error);
+    }
+  };
 
   const renderContent = () => {
     switch (activeSection) {
@@ -215,7 +181,52 @@ const handleSubmitOrder = async (orderData: OrderData) => {
         return renderOverview();
     }
   };
+  const userId = user?.id;
+  useEffect(() => {
+    if (user) {
+      if (userId !== undefined) {
+        unread(userId);
+      }
+    }
+  }, [userId, unread, user]);
 
+  useEffect(() => {
+    // Fetch user orders when the component mounts or when user changes
+    if (user && user.id && userApproved) {
+      userApproved(user.id)
+        .then((orders) => {
+          console.log("Fetched user orders:", orders);
+        })
+        .catch((error) => {
+          console.error("Failed to fetch user orders:", error);
+        });
+    }
+  }, [user, userApproved]);
+  //fetch getOrdersUser
+  useEffect(() => {
+    if (user && user.id && getOrdersUser) {
+      getOrdersUser(user.id)
+        .then((orders) => {
+          console.log("Fetched user orders:", orders);
+        })
+        .catch((error) => {
+          console.error("Failed to fetch user orders:", error);
+        });
+    }
+  }, [user, getOrdersUser]);
+
+  //fetch userPending
+  useEffect(() => {
+    if (user && user.id && userPending) {
+      userPending(user.id)
+        .then((orders) => {
+          console.log("Fetched user orders:", orders);
+        })
+        .catch((error) => {
+          console.error("Failed to fetch user orders:", error);
+        });
+    }
+  }, [user, userPending]);
   const renderOverview = () => (
     <div className="space-y-6">
       {/* Quick Stats */}
@@ -229,7 +240,7 @@ const handleSubmitOrder = async (orderData: OrderData) => {
               Active Orders
             </span>
           </div>
-          <h3 className="text-2xl font-bold text-gray-900">3</h3>
+          <h3 className="text-2xl font-bold text-gray-900">{orders.length}</h3>
           <p className="text-sm text-gray-500 mt-2">2 in progress, 1 pending</p>
         </div>
 
@@ -263,6 +274,11 @@ const handleSubmitOrder = async (orderData: OrderData) => {
           <div className="flex items-center justify-between mb-4">
             <div className="bg-yellow-100 text-yellow-600 p-3 rounded-lg">
               <Bell className="h-6 w-6" />
+              {notifications.length > 0 && (
+                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
+                  {notifications.length}
+                </span>
+              )}
             </div>
             <span className="text-sm font-semibold text-yellow-600">
               Notifications
@@ -309,13 +325,13 @@ const handleSubmitOrder = async (orderData: OrderData) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {recentOrders.map((order) => (
-                <tr key={order.id} className="hover:bg-gray-50">
+              {orders.map((order) => (
+                <tr key={order.orderNumber} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {order.id}
+                    {order.orderNumber}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {order.service}
+                    {order.service.name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
@@ -339,7 +355,7 @@ const handleSubmitOrder = async (orderData: OrderData) => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ${order.amount.toFixed(2)}
+                    ${order.service.price}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <button className="text-[#106EBE] hover:text-[#0FFCBE] font-medium">
@@ -489,21 +505,30 @@ const handleSubmitOrder = async (orderData: OrderData) => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100">  
       {/* Top Navigation Bar */}
       <nav className="bg-white shadow-md fixed w-full z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <h1 className="text-xl font-bold text-gray-800">My Dashboard</h1>
+            <h1 className="text-xl font-bold text-gray-800 cursor-pointer" onClick={() => {
+              setActiveSection("overview");
+            }}>My Dashboard</h1>
 
             {/* Right side */}
             <div className="flex items-center space-x-4">
               {/* Notifications */}
-              <button className="relative p-2 text-gray-500 hover:text-gray-700 focus:outline-none">
+              <button
+                className="relative p-2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                onClick={() => {
+                  navigate("/notifications");
+                }}
+              >
                 <Bell className="h-6 w-6" />
-                <span className="absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
-                  2
-                </span>
+                {notifications.length > 0 && (
+                  <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
+                    {notifications.length}
+                  </span>
+                )}
               </button>
 
               {/* Profile Dropdown */}

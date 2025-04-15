@@ -20,12 +20,12 @@ enum AccountStatus {
   pending
   suspended
 }
-
+ 
 enum OrderStatus {
-  pending
-  processing
-  completed
-  cancelled
+ pending
+ rejected
+ approved
+ flagged
 }
 
 enum OrderProgressStatus {
@@ -61,10 +61,14 @@ enum SupportTicketStatus {
 }
 
 enum NotificationType {
+  user_registered
+  order_created
   order_update
+  order_completed
   payment
   support
   system
+  //
 }
 
 enum NotificationStatus {
@@ -132,6 +136,7 @@ model Order {
   budget                 Decimal     @map("total_amount")
   additionalRequirements String?
   attachments            Json? // Allows storing an array of file paths/URLs
+  deadline               DateTime?   @map("deadline")
   createdAt              DateTime    @default(now()) @map("created_at")
   updatedAt              DateTime    @default(now()) @updatedAt @map("updated_at")
 
